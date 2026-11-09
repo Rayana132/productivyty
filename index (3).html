@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#dfeaff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="description" content="Планы на день, отметки и общая доска четырёх участниц марафона.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 120 110%27%3E%3Cpath d=%27M60 9C82 9 98 24 99 44c11 4 17 13 17 23 0 16-14 28-32 28H36C18 95 4 83 4 67c0-11 7-20 18-23C24 24 38 9 60 9Z%27 fill=%27%232f7bff%27/%3E%3Cellipse cx=%2745%27 cy=%2757%27 rx=%2713.5%27 ry=%2714.5%27 fill=%27%23fff%27/%3E%3Cellipse cx=%2778%27 cy=%2757%27 rx=%2713.5%27 ry=%2714.5%27 fill=%27%23fff%27/%3E%3Ccircle cx=%2747%27 cy=%2754%27 r=%277.6%27 fill=%27%2317233d%27/%3E%3Ccircle cx=%2780%27 cy=%2754%27 r=%277.6%27 fill=%27%2317233d%27/%3E%3C/svg%3E">
+<title>Марафон четырёх</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: одна колонка-телефон, мягкие голубые градиенты, белые карточки, нижняя навигация */
+:root{
+  --bg-top:#dfeaff;
+  --bg-bot:#f4f8ff;
+  --card:#ffffff;
+  --card-2:#f2f6ff;
+  --ink:#0e1b33;
+  --muted:#6f82a6;
+  --line:#e2eaf8;
+  --accent:#2f7bff;
+  --accent-soft:#e3edff;
+  --green:#2ec98b;
+  --green-soft:#d8f6e9;
+  --amber:#ffc24d;
+  --amber-soft:#fff1d4;
+  --red:#ff7b85;
+  --red-soft:#ffe1e3;
+  --grey:#cdd8ea;
+  --grey-soft:#eef2f9;
+  --shadow:0 10px 30px rgba(31,74,150,.12);
+  --shadow-s:0 4px 14px rgba(31,74,150,.10);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:
+    radial-gradient(120% 60% at 50% 0%, var(--bg-top) 0%, var(--bg-bot) 62%) no-repeat,
+    var(--bg-bot);
+  color:var(--ink);
+  font-family:'Manrope',system-ui,-apple-system,sans-serif;
+  font-size:15px;
+  -webkit-font-smoothing:antialiased;
+}
+.shell{
+  max-width:460px;margin:0 auto;min-height:100%;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:14px 108px;
+  display:flex;flex-direction:column;gap:14px;
+}
+h1,h2,h3{margin:0;font-family:'Fredoka',system-ui,sans-serif;font-weight:600;text-wrap:balance}
+p{margin:0}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:12px}
+input{font:inherit;color:inherit}
+.hide{display:none!important}
+
+/* ---------- карточки ---------- */
+.card{background:var(--card);border-radius:20px;box-shadow:var(--shadow-s);padding:16px}
+.card.flat{box-shadow:none;border:1.5px solid var(--line)}
+.row{display:flex;align-items:center;gap:10px}
+.col{display:flex;flex-direction:column}
+.spread{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.muted{color:var(--muted)}
+.tiny{font-size:12px;font-weight:600;letter-spacing:.01em}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+/* ---------- шапка ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:2px 2px 0}
+.topbar h1{font-size:25px;line-height:1.1}
+.who{display:flex;align-items:center;gap:9px;background:var(--card);border-radius:999px;padding:5px 13px 5px 5px;box-shadow:var(--shadow-s)}
+.who span{font-weight:700;font-size:13px}
+
+/* ---------- маскот ---------- */
+.masc{display:block;flex:none}
+
+/* ---------- геройская карточка дня ---------- */
+.hero{
+  position:relative;overflow:hidden;border-radius:26px;padding:17px 17px 15px;
+  background:linear-gradient(160deg,#2f6fe8,#6ba1ff);
+  color:#fff;box-shadow:0 12px 26px rgba(47,111,232,.24);min-height:152px;
+}
+.hero.is-green{background:linear-gradient(160deg,#17a97c,#45d5a0);box-shadow:0 12px 26px rgba(23,169,124,.22)}
+.hero.is-amber{background:linear-gradient(160deg,#e3920c,#ffc452);box-shadow:0 12px 26px rgba(227,146,12,.22)}
+.hero.is-red{background:linear-gradient(160deg,#dc4a5e,#ff8d96);box-shadow:0 12px 26px rgba(220,74,94,.22)}
+.hero>*{position:relative;z-index:1}
+.peek{position:absolute;right:-12px;bottom:-10px;width:122px;z-index:0;pointer-events:none}
+.hero .date{font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;opacity:.9}
+.hero .state{font-family:'Fredoka',sans-serif;font-size:23px;font-weight:600;line-height:1.15;margin-top:2px}
+.hero .hint{font-size:12.5px;font-weight:600;opacity:.92;margin-top:3px}
+.bar{height:9px;border-radius:99px;background:rgba(255,255,255,.35);overflow:hidden;margin-top:12px}
+.bar i{display:block;height:100%;border-radius:99px;background:#fff;transition:width .35s ease}
+.daynav{display:flex;gap:6px}
+.daynav button{
+  width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.26);
+  display:grid;place-items:center;color:#fff;font-size:15px;font-weight:800;
+}
+.daynav button[disabled]{opacity:.35;cursor:default}
+
+/* ---------- задачи ---------- */
+.tasks{display:flex;flex-direction:column;gap:8px}
+.task{
+  display:flex;align-items:center;gap:12px;background:var(--card-2);
+  border-radius:14px;padding:11px 12px;transition:background .18s ease;
+}
+.task.done{background:var(--green-soft)}
+.box{
+  flex:none;width:23px;height:23px;border-radius:8px;border:2.2px solid var(--grey);
+  background:var(--card);display:grid;place-items:center;transition:.18s ease;
+}
+.task.done .box{background:var(--green);border-color:var(--green)}
+.box svg{width:13px;height:13px;stroke:#fff;stroke-width:3.4;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.task.done .box svg{opacity:1}
+.task .txt{flex:1;min-width:0;font-size:14.5px;font-weight:600;line-height:1.35;overflow-wrap:anywhere;text-align:left}
+.task.done .txt{opacity:.62;text-decoration:line-through}
+.task .del{flex:none;width:24px;height:24px;border-radius:50%;color:var(--muted);font-size:16px;line-height:1;display:grid;place-items:center;opacity:.7}
+.adder{display:flex;flex-direction:column;gap:9px}
+.adder input{
+  width:100%;min-width:0;background:var(--card-2);border:1.8px solid transparent;border-radius:16px;
+  padding:14px 15px;font-size:16px;font-weight:600;
+}
+.adder input::placeholder{color:var(--muted);font-weight:600}
+.adder input:focus{border-color:var(--accent);outline:none}
+.addbtn{
+  width:100%;padding:14px;border-radius:16px;background:var(--accent);color:#fff;
+  font-size:15px;font-weight:800;box-shadow:0 7px 16px rgba(47,123,255,.3);
+  transition:opacity .15s ease;
+}
+.addbtn:disabled{opacity:.4;box-shadow:none;cursor:default}
+.addbtn.ghost{background:var(--card-2);color:var(--accent);box-shadow:none}
+.addbtn.ghost:disabled{opacity:.5}
+.linkbtn{align-self:flex-start;font-size:13.5px;font-weight:800;color:var(--accent);padding:2px 0}
+.task.draft{background:var(--accent-soft)}
+.task .num{
+  flex:none;width:23px;height:23px;border-radius:8px;background:var(--accent);color:#fff;
+  display:grid;place-items:center;font-size:12px;font-weight:800;
+}
+[hidden]{display:none!important}
+body.kb .tabbar{display:none}
+.empty{text-align:center;color:var(--muted);font-size:13.5px;font-weight:600;padding:14px 6px;line-height:1.45}
+
+/* ---------- неделя ---------- */
+.weekbar{display:flex;align-items:center;gap:7px}
+.weekbar .wnav{
+  flex:none;width:32px;height:32px;border-radius:50%;background:var(--card-2);
+  display:grid;place-items:center;font-size:17px;font-weight:800;color:var(--muted);
+}
+.weekbar .wnav[disabled]{opacity:.35;cursor:default}
+.wdays{flex:1;min-width:0;display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.wd{
+  display:flex;flex-direction:column;align-items:center;gap:4px;padding:7px 1px 7px;
+  border-radius:15px;background:var(--card-2);border:2px solid transparent;
+}
+.wd em{font-style:normal;font-size:9.5px;font-weight:800;letter-spacing:.03em;color:var(--muted);text-transform:uppercase}
+.wd b{font-family:'Fredoka',sans-serif;font-size:15px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.wd .sdot{width:7px;height:7px;border-radius:50%;background:var(--grey)}
+.wd .sdot.green{background:var(--green)}
+.wd .sdot.amber{background:var(--amber)}
+.wd .sdot.red{background:var(--red)}
+.wd.sel{border-color:var(--accent);background:var(--accent-soft)}
+.wd.sel em{color:var(--accent)}
+.wd.out{opacity:.38}
+.wd.today b{color:var(--accent)}
+
+/* ---------- доска ---------- */
+.legend{display:flex;flex-wrap:wrap;gap:7px}
+.lg{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--muted)}
+.dot{width:12px;height:12px;border-radius:5px}
+.boardwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+.boardwrap::-webkit-scrollbar{height:5px}
+.boardwrap::-webkit-scrollbar-thumb{background:var(--grey);border-radius:9px}
+.bgrid{display:grid;gap:5px;min-width:max-content}
+.bname{
+  position:sticky;left:0;z-index:2;background:var(--card);display:flex;align-items:center;gap:7px;
+  padding-right:9px;width:112px;border-radius:12px;
+}
+.bname strong{font-size:13px;font-weight:800;white-space:nowrap}
+.bhead{width:112px}
+.cell{
+  width:27px;height:27px;border-radius:9px;background:var(--grey-soft);border:1.6px solid transparent;
+  display:grid;place-items:center;font-size:9.5px;font-weight:800;color:var(--muted);
+}
+.cell.green{background:var(--green);color:#fff}
+.cell.amber{background:var(--amber);color:#4a3200}
+.cell.red{background:var(--red);color:#fff}
+.cell.today{border-color:var(--ink)}
+.cnum{width:27px;text-align:center;font-size:9.5px;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums}
+.cwd{width:27px;text-align:center;font-size:9.5px;font-weight:800;color:var(--muted);text-transform:uppercase}
+.cwd.we{color:var(--red)}
+
+/* ---------- список участниц ---------- */
+.plist{display:flex;flex-direction:column;gap:9px}
+.pcard{
+  display:flex;align-items:center;gap:12px;background:var(--card-2);border-radius:20px;
+  padding:11px 13px;text-align:left;width:100%;transition:transform .14s ease;
+}
+.pcard:active{transform:scale(.985)}
+.pcard .meta{flex:1;min-width:0}
+.pcard strong{display:block;font-size:15px;font-weight:800}
+.mini{display:flex;gap:3px;margin-top:6px}
+.mini i{width:10px;height:10px;border-radius:4px;background:var(--grey-soft)}
+.mini i.green{background:var(--green)} .mini i.amber{background:var(--amber)} .mini i.red{background:var(--red)}
+.chev{color:var(--muted);font-size:19px;font-weight:700}
+.pill{
+  font-size:11px;font-weight:800;padding:4px 10px;border-radius:99px;
+  background:var(--accent-soft);color:var(--accent);white-space:nowrap;
+}
+
+/* ---------- статистика ---------- */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.stat{background:var(--card-2);border-radius:18px;padding:12px 13px}
+.stat b{display:block;font-family:'Fredoka',sans-serif;font-size:25px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.stat span{display:block;font-size:11.5px;font-weight:700;color:var(--muted);margin-top:5px}
+
+/* ---------- дневник участницы ---------- */
+.dayrow{display:flex;gap:11px;padding:11px 0;border-bottom:1.5px solid var(--line)}
+.dayrow:last-child{border-bottom:none}
+.dmark{flex:none;width:38px;height:38px;border-radius:13px;display:grid;place-items:center;font-size:11px;font-weight:800;background:var(--grey-soft);color:var(--muted)}
+.dmark.green{background:var(--green);color:#fff}
+.dmark.amber{background:var(--amber);color:#4a3200}
+.dmark.red{background:var(--red);color:#fff}
+.dayrow ul{margin:3px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px}
+.dayrow li{font-size:13.5px;font-weight:600;line-height:1.35;display:flex;gap:7px;align-items:flex-start}
+.dayrow li i{flex:none;font-style:normal;font-weight:800;width:14px}
+.dayrow li.ok{color:var(--muted);text-decoration:line-through}
+
+/* ---------- нижняя навигация ---------- */
+.tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:center;
+  padding:0 max(16px,env(safe-area-inset-left,0px)) calc(14px + env(safe-area-inset-bottom,0px));
+  pointer-events:none;
+}
+.tabbar nav{
+  pointer-events:auto;display:flex;gap:4px;background:var(--card);border-radius:999px;
+  padding:6px;box-shadow:var(--shadow);width:100%;max-width:330px;
+}
+.tabbar button{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;
+  border-radius:999px;font-size:10.5px;font-weight:800;color:var(--muted);
+}
+.tabbar button[aria-current="page"]{background:var(--accent);color:#fff}
+.tabbar svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- экран выбора / оверлей ---------- */
+.sheet{
+  position:fixed;inset:0;z-index:30;background:var(--bg-bot);overflow-y:auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:calc(14px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-bottom,0px));
+}
+.sheet .inner{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.back{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:800;color:var(--accent)}
+.pickgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.pick{
+  background:var(--card);border-radius:24px;padding:16px 10px;display:flex;flex-direction:column;
+  align-items:center;gap:8px;box-shadow:var(--shadow-s);font-weight:800;font-size:15px;
+}
+.pick:active{transform:scale(.98)}
+.note{font-size:12.5px;font-weight:600;color:var(--muted);line-height:1.5}
+.banner{background:var(--amber-soft);color:var(--ink);border-radius:18px;padding:11px 14px;font-size:12.5px;font-weight:700;line-height:1.45}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="shell" id="app" hidden>
+  <header class="topbar">
+    <div class="col" style="gap:1px">
+      <h1 id="hTitle">Марафон</h1>
+      <p class="tiny muted" id="hSub">день 1 из 30</p>
+    </div>
+    <button class="who" id="whoBtn" aria-label="Сменить участницу">
+      <span id="whoMasc"></span><span id="whoName">—</span>
+    </button>
+  </header>
+
+  <div id="warn" class="banner hide"></div>
+
+  <!-- ====== СЕГОДНЯ ====== -->
+  <section id="viewDay" class="col" style="gap:14px">
+    <div class="card col" style="gap:10px;padding:13px">
+      <div class="spread">
+        <p class="eyebrow" id="wLabel">—</p>
+        <p class="tiny muted" id="wRange">—</p>
+      </div>
+      <div class="weekbar">
+        <button class="wnav" id="wPrev" aria-label="Предыдущая неделя">‹</button>
+        <div class="wdays" id="wDays"></div>
+        <button class="wnav" id="wNext" aria-label="Следующая неделя">›</button>
+      </div>
+    </div>
+
+    <div class="hero" id="hero">
+      <div class="spread" style="align-items:flex-start;gap:12px">
+        <div class="col" style="gap:1px;min-width:0">
+          <p class="date" id="dDate">—</p>
+          <p class="state" id="dState">—</p>
+          <p class="hint" id="dHint">—</p>
+        </div>
+        <span id="dMasc"></span>
+      </div>
+      <div class="bar"><i id="dBar" style="width:0%"></i></div>
+      <div class="spread" style="margin-top:10px">
+        <p class="tiny" style="opacity:.92" id="dCount">0 из 0</p>
+        <div class="daynav">
+          <button id="dPrev" aria-label="Предыдущий день">‹</button>
+          <button id="dNext" aria-label="Следующий день">›</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card col" style="gap:12px">
+      <div class="spread">
+        <h2 style="font-size:17px" id="planTitle">План на день</h2>
+        <span class="tiny muted" id="dPill">—</span>
+      </div>
+      <div class="tasks" id="taskList"></div>
+      <button class="linkbtn" id="moreBtn" hidden>+ добавить задачу</button>
+      <form class="adder" id="adder" autocomplete="off">
+        <input id="newTask" placeholder="Например: английский, 20 слов" aria-label="Новая задача"
+               maxlength="120" enterkeyhint="done">
+        <button type="submit" class="addbtn ghost" id="addBtn" disabled>Добавить в план</button>
+      </form>
+      <button class="addbtn" id="launchBtn" hidden>Запустить день</button>
+    </div>
+  </section>
+
+  <!-- ====== ДОСКА ====== -->
+  <section id="viewBoard" class="col hide" style="gap:14px">
+    <div class="card col" style="gap:12px">
+      <div class="spread">
+        <h2 style="font-size:17px">Общая доска</h2>
+        <span class="pill" id="bRange">—</span>
+      </div>
+      <div class="legend">
+        <span class="lg"><i class="dot" style="background:var(--green)"></i>всё сделано</span>
+        <span class="lg"><i class="dot" style="background:var(--amber)"></i>часть</span>
+        <span class="lg"><i class="dot" style="background:var(--red)"></i>ничего</span>
+        <span class="lg"><i class="dot" style="background:var(--grey-soft)"></i>впереди</span>
+      </div>
+      <div class="boardwrap"><div class="bgrid" id="bgrid"></div></div>
+    </div>
+
+    <div class="card col" style="gap:12px">
+      <h2 style="font-size:17px">Участницы</h2>
+      <div class="plist" id="plist"></div>
+    </div>
+
+    <div class="card flat col" style="gap:9px">
+      <p class="eyebrow">Старт марафона</p>
+      <div class="row">
+        <input type="date" id="startInput" style="flex:1;min-width:0;background:var(--card-2);border:none;border-radius:14px;padding:11px 13px;font-weight:700">
+        <button class="pill" id="saveStart" style="padding:10px 16px;background:var(--accent);color:#fff">Сохранить</button>
+      </div>
+      <p class="note">Марафон идёт 30 дней от этой даты. Дату видят все.</p>
+    </div>
+  </section>
+</div>
+
+<!-- ====== КАРТОЧКА УЧАСТНИЦЫ ====== -->
+<div class="sheet hide" id="sheet">
+  <div class="inner">
+    <button class="back" id="sBack">‹ Назад</button>
+    <div class="card col" style="gap:14px;align-items:center;text-align:center">
+      <span id="sMasc"></span>
+      <div class="col" style="gap:3px">
+        <h2 id="sName" style="font-size:23px">—</h2>
+        <p class="tiny muted" id="sSub">—</p>
+      </div>
+      <div class="stats" style="width:100%">
+        <div class="stat"><b id="sGreen" style="color:var(--green)">0</b><span>зелёных дней</span></div>
+        <div class="stat"><b id="sAmber" style="color:var(--amber)">0</b><span>жёлтых дней</span></div>
+        <div class="stat"><b id="sRed" style="color:var(--red)">0</b><span>красных дней</span></div>
+        <div class="stat"><b id="sStreak" style="color:var(--accent)">0</b><span>дней подряд</span></div>
+      </div>
+    </div>
+    <div class="card col" style="gap:4px">
+      <h2 style="font-size:17px;margin-bottom:6px">Планы по дням</h2>
+      <div id="sDays"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== ВЫБОР УЧАСТНИЦЫ ====== -->
+<div class="sheet" id="gate">
+  <div class="inner" style="gap:18px;justify-content:center;min-height:70vh">
+    <div class="col" style="gap:6px;text-align:center;align-items:center">
+      <span id="gateMasc"></span>
+      <h2 style="font-size:27px;margin-top:6px">Марафон четырёх</h2>
+      <p class="note" style="max-width:30ch">Пишем планы на день, отмечаем сделанное и видим друг друга на общей доске.</p>
+    </div>
+    <div class="col" style="gap:10px">
+      <p class="eyebrow" style="text-align:center">Кто ты?</p>
+      <div class="pickgrid" id="pickGrid"></div>
+    </div>
+    <p class="note" style="text-align:center">Выбор сохранится на этом телефоне. Сменить можно в шапке.</p>
+  </div>
+</div>
+
+<div class="tabbar hide" id="tabbar">
+  <nav>
+    <button data-tab="day" aria-current="page">
+      <svg viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h10"/></svg><span>Мой день</span>
+    </button>
+    <button data-tab="board">
+      <svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M3.5 9.5h17M9 9.5v10M15 9.5v10"/></svg><span>Доска</span>
+    </button>
+  </nav>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+/* ======================================================================
+   НАСТРОЙКИ — здесь можно менять
+   ====================================================================== */
+const SUPABASE_URL = 'https://zelndzeflenlqxjuwsrg.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_oBYDiht0x8erunJgWXSJ2Q_-SBowKlh';
+
+/* ============ данные ============ */
+const PEOPLE = [
+  {id:'diana',  name:'Диана', c1:'#8ec9ff', c2:'#2f7bff'},
+  {id:'vika',   name:'Вика',  c1:'#a6f2d0', c2:'#22c58a'},
+  {id:'stasya', name:'Стася', c1:'#d6bdff', c2:'#8b5cf6'},
+  {id:'rayana', name:'Раяна', c1:'#ffdd93', c2:'#ff9b3d'}
+];
+const LEN = 30;
+const byId = id => PEOPLE.find(p=>p.id===id);
+
+/* ============ даты ============ */
+const pad = n => String(n).padStart(2,'0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseYmd = s => {const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d)};
+const addDays = (s,n) => {const d=parseYmd(s); d.setDate(d.getDate()+n); return ymd(d)};
+const diffDays = (a,b) => Math.round((parseYmd(b)-parseYmd(a))/86400000);
+const TODAY = ymd(new Date());
+const WD = ['вс','пн','вт','ср','чт','пт','сб'];
+const MN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const human = s => {const d=parseYmd(s); return `${WD[d.getDay()]}, ${d.getDate()} ${MN[d.getMonth()]}`};
+function weekStart(s){const d=parseYmd(s); const sh=(d.getDay()+6)%7; d.setDate(d.getDate()-sh); return ymd(d)}
+function defaultStart(){
+  const d = new Date(); const sh = (d.getDay()+6)%7;
+  d.setDate(d.getDate()-sh); return ymd(d);
+}
+
+/* ============ состояние ============ */
+const state = {
+  me: null,
+  start: defaultStart(),
+  cursor: TODAY,
+  days: new Map(),      // "person__date" -> {person,date,tasks:[]}
+  tab: 'day',
+  db: null,
+  canWrite: true,
+  loaded: false
+};
+try{ state.me = localStorage.getItem('marafon.me') }catch(e){}
+if(!byId(state.me)) state.me = null;
+
+/* ============ маскот ============ */
+const CLOUD = 'M60 9C82 9 98 24 99 44c11 4 17 13 17 23 0 16-14 28-32 28H36C18 95 4 83 4 67c0-11 7-20 18-23C24 24 38 9 60 9Z';
+let uid = 0;
+function mascot(p, mood, size){
+  const g = 'g'+(++uid), h = 'h'+uid;
+  const eyes = mood==='red'
+    ? `<path d="M36 58q8 9 16 0" fill="none" stroke="#17233d" stroke-width="5" stroke-linecap="round"/>
+       <path d="M68 58q8 9 16 0" fill="none" stroke="#17233d" stroke-width="5" stroke-linecap="round"/>
+       <text x="92" y="30" font-family="Fredoka,sans-serif" font-size="17" font-weight="600" fill="#17233d" opacity=".75">z</text>`
+    : `<ellipse cx="45" cy="57" rx="13.5" ry="14.5" fill="#fff"/>
+       <ellipse cx="78" cy="57" rx="13.5" ry="14.5" fill="#fff"/>
+       <circle cx="${mood==='green'?47:45}" cy="${mood==='green'?54:58}" r="7.6" fill="#17233d"/>
+       <circle cx="${mood==='green'?80:78}" cy="${mood==='green'?54:58}" r="7.6" fill="#17233d"/>
+       <circle cx="${mood==='green'?49.6:47.6}" cy="${mood==='green'?51:55}" r="2.4" fill="#fff" opacity=".9"/>
+       <circle cx="${mood==='green'?82.6:80.6}" cy="${mood==='green'?51:55}" r="2.4" fill="#fff" opacity=".9"/>`;
+  const mouth = mood==='green'
+    ? `<path d="M53 76q8 9 16 0" fill="none" stroke="#17233d" stroke-width="4.6" stroke-linecap="round"/>`
+    : mood==='amber'
+    ? `<path d="M54 78h14" fill="none" stroke="#17233d" stroke-width="4.6" stroke-linecap="round"/>`
+    : '';
+  return `<svg class="masc" width="${size}" height="${Math.round(size*0.92)}" viewBox="0 0 120 110" role="img" aria-label="маскот ${p.name}">
+    <defs>
+      <linearGradient id="${g}" x1="18%" y1="8%" x2="86%" y2="96%">
+        <stop offset="0" stop-color="${p.c1}"/><stop offset="1" stop-color="${p.c2}"/>
+      </linearGradient>
+      <radialGradient id="${h}" cx="30%" cy="22%" r="46%">
+        <stop offset="0" stop-color="#fff" stop-opacity=".72"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <path d="${CLOUD}" fill="url(#${g})"/>
+    <path d="${CLOUD}" fill="url(#${h})"/>
+    ${eyes}${mouth}
+  </svg>`;
+}
+const mascotPeek = mascot;
+
+/* ============ статусы ============ */
+function docOf(pid, date){ return state.days.get(pid+'__'+date) }
+function statusOf(pid, date){
+  if(date > TODAY) return 'future';
+  if(date < state.start || diffDays(state.start,date) >= LEN) return 'future';
+  const d = docOf(pid,date);
+  const tasks = (d && d.tasks) || [];
+  if(!tasks.length) return date===TODAY ? 'open' : 'red';
+  const done = tasks.filter(t=>t.done).length;
+  if(done===tasks.length) return 'green';
+  if(done>0) return 'amber';
+  return date===TODAY ? 'open' : 'red';
+}
+const MOOD = {green:'green', amber:'amber', red:'red', open:'amber', future:'amber'};
+function dayList(){ const a=[]; for(let i=0;i<LEN;i++) a.push(addDays(state.start,i)); return a }
+
+/* ============ запись ============ */
+const pending = new Map();
+async function saveDay(pid, date, tasks){
+  const key = pid+'__'+date;
+  state.days.set(key, {person:pid, date, tasks});
+  render();
+  if(!state.db) return;
+  if(pending.get(key)){ pending.set(key,'again'); return }
+  pending.set(key, true);
+  try{
+    while(true){
+      const cur = state.days.get(key);
+      const {error} = await state.db.from('days')
+        .upsert({id:key, person:pid, day:date, tasks:cur.tasks, updated_at:new Date().toISOString()});
+      if(error) throw error;
+      if(pending.get(key)!=='again') break;
+      pending.set(key, true);
+    }
+  }catch(e){
+    console.error(e);
+    $('warn').textContent = 'Не получилось сохранить. Проверь интернет — отметка пока только на этом телефоне.';
+    $('warn').classList.remove('hide');
+  }finally{ pending.delete(key) }
+}
+async function saveStart(date){
+  state.start = date; state.cursor = TODAY; render();
+  if(!state.db) return;
+  try{
+    const {error} = await state.db.from('config').upsert({key:'marathon', value:{start:date, len:LEN}});
+    if(error) throw error;
+  }catch(e){ console.error(e) }
+}
+
+/* ============ отрисовка ============ */
+const $ = id => document.getElementById(id);
+
+function render(){
+  if(!state.me){ return }
+  const me = byId(state.me);
+  $('app').hidden = false;
+  $('tabbar').classList.remove('hide');
+  $('gate').classList.add('hide');
+
+  const dayNo = Math.min(LEN, Math.max(1, diffDays(state.start, TODAY)+1));
+  $('hSub').textContent = (TODAY<state.start) ? 'старт '+human(state.start)
+    : (diffDays(state.start,TODAY)>=LEN ? 'марафон завершён' : `день ${dayNo} из ${LEN}`);
+  $('whoMasc').innerHTML = mascot(me,'green',26);
+  $('whoName').textContent = me.name;
+
+  if(!state.loaded){ $('warn').textContent = 'Загружаю общие данные…'; $('warn').classList.remove('hide') }
+  else if($('warn').textContent === 'Загружаю общие данные…'){ $('warn').classList.add('hide') }
+
+  renderDay(me);
+  renderBoard();
+  $('viewDay').classList.toggle('hide', state.tab!=='day');
+  $('viewBoard').classList.toggle('hide', state.tab!=='board');
+  document.querySelectorAll('.tabbar button').forEach(b=>{
+    if(b.dataset.tab===state.tab) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');
+  });
+}
+
+function renderDay(me){
+  const date = state.cursor;
+  const d = docOf(me.id, date);
+  const tasks = (d && d.tasks) || [];
+  const done = tasks.filter(t=>t.done).length;
+  const st = statusOf(me.id, date);
+  const vis = (date>TODAY) ? 'future' : st;
+
+  const hero = $('hero');
+  hero.className = 'hero' + (vis==='green'?' is-green':vis==='amber'?' is-amber':vis==='red'?' is-red':'');
+  $('dDate').textContent = date===TODAY ? 'сегодня · '+human(date) : human(date);
+  const titles = {green:'День зелёный!', amber:'Сделано наполовину', red:'День красный', open:'План ещё открыт', future:'Планы наперёд'};
+  $('dState').textContent = (vis==='open' && !tasks.length) ? 'План не составлен' : titles[vis];
+  const hints = {
+    green:'Все задачи закрыты. Так держать.',
+    amber:'Закрой остальное — и день станет зелёным.',
+    red:'Ни одна задача не закрыта.',
+    open: tasks.length ? 'Отмечай сделанное в течение дня.' : 'Напиши задачи и нажми «Запустить день».',
+    future: tasks.length ? 'План готов, ждём этот день.' : 'Можно составить план заранее.'
+  };
+  $('dHint').textContent = hints[vis];
+  $('dMasc').innerHTML = mascot(me, MOOD[vis]||'amber', 68);
+  $('dBar').style.width = (tasks.length ? Math.round(done/tasks.length*100) : 0)+'%';
+  $('dCount').textContent = `${done} из ${tasks.length}`;
+  $('dPill').textContent = date===TODAY ? 'сегодня' : human(date).split(',')[0];
+
+  const first = state.start, last = addDays(state.start, LEN-1);
+  $('dPrev').disabled = date<=first;
+  $('dNext').disabled = date>=last;
+
+  if(state._lastDay !== date){ state._lastDay = date; state.adding = false }
+  const published = tasks.length > 0;
+  const draft = published ? [] : loadDraft();
+  const list = $('taskList');
+  list.innerHTML = '';
+
+  if(published){
+    tasks.forEach((t,i)=>{
+      const el = document.createElement('div');
+      el.className = 'task'+(t.done?' done':'');
+      el.innerHTML = `
+        <button class="box" data-toggle="${i}" aria-pressed="${t.done?'true':'false'}" aria-label="Отметить задачу">
+          <svg viewBox="0 0 24 24"><path d="M5 13l4.5 4.5L19 7"/></svg>
+        </button>
+        <span class="txt">${esc(t.text)}</span>
+        <button class="del" data-del="${i}" aria-label="Удалить задачу">×</button>`;
+      list.appendChild(el);
+    });
+  } else if(draft.length){
+    draft.forEach((t,i)=>{
+      const el = document.createElement('div');
+      el.className = 'task draft';
+      el.innerHTML = `<span class="num">${i+1}</span>
+        <span class="txt">${esc(t)}</span>
+        <button class="del" data-ddel="${i}" aria-label="Убрать из плана">×</button>`;
+      list.appendChild(el);
+    });
+  } else {
+    list.innerHTML = '<p class="empty">Напиши, что хочешь успеть за день.<br>Лучше 2–3 задачи, которые точно осилишь.</p>';
+  }
+
+  const future = date > TODAY;
+  $('planTitle').textContent = published ? 'План на день' : 'Составляем план';
+  $('launchBtn').hidden = published;
+  $('launchBtn').disabled = draft.length === 0;
+  $('launchBtn').textContent = future ? 'Сохранить план' : 'Запустить день';
+  $('moreBtn').hidden = !published || !!state.adding;
+  $('adder').hidden = published && !state.adding;
+  $('addBtn').classList.toggle('ghost', !published);
+  $('addBtn').textContent = published ? 'Добавить' : 'Добавить в план';
+  renderWeek(me);
+}
+
+function renderWeek(me){
+  const ws = weekStart(state.cursor);
+  const first = state.start, last = addDays(state.start, LEN-1);
+  const wrap = $('wDays'); wrap.innerHTML = '';
+  for(let i=0;i<7;i++){
+    const d = addDays(ws,i);
+    const out = d < first || d > last;
+    const st = statusOf(me.id, d);
+    const b = document.createElement('button');
+    b.className = 'wd' + (d===state.cursor?' sel':'') + (out?' out':'') + (d===TODAY?' today':'');
+    b.dataset.day = d;
+    if(out) b.disabled = true;
+    b.setAttribute('aria-label', human(d));
+    b.innerHTML = `<em>${WD[parseYmd(d).getDay()]}</em><b>${parseYmd(d).getDate()}</b>` +
+      `<span class="sdot ${st==='green'||st==='amber'||st==='red'?st:''}"></span>`;
+    wrap.appendChild(b);
+  }
+  const wEnd = addDays(ws,6);
+  const m1 = MN[parseYmd(ws).getMonth()], m2 = MN[parseYmd(wEnd).getMonth()];
+  $('wRange').textContent = m1===m2
+    ? `${parseYmd(ws).getDate()}–${parseYmd(wEnd).getDate()} ${m1}`
+    : `${parseYmd(ws).getDate()} ${m1.slice(0,3)} – ${parseYmd(wEnd).getDate()} ${m2.slice(0,3)}`;
+  const wn = Math.floor(diffDays(weekStart(state.start), ws)/7) + 1;
+  $('wLabel').textContent = (wn>=1 && wn<=Math.ceil(LEN/7)) ? `Неделя ${wn}` : 'Вне марафона';
+  $('wPrev').disabled = addDays(ws,-1) < first;
+  $('wNext').disabled = addDays(ws,7) > last;
+}
+
+function renderBoard(){
+  const days = dayList();
+  const grid = $('bgrid');
+  grid.style.gridTemplateColumns = `112px repeat(${LEN}, 27px)`;
+  grid.innerHTML = '';
+  const h1 = document.createElement('div'); h1.className='bhead'; grid.appendChild(h1);
+  days.forEach(d=>{
+    const wd = parseYmd(d).getDay();
+    const c = document.createElement('div');
+    c.className = 'cwd' + (wd===0||wd===6 ? ' we' : '');
+    c.textContent = WD[wd][0];
+    grid.appendChild(c);
+  });
+  const h2 = document.createElement('div'); h2.className='bhead'; grid.appendChild(h2);
+  days.forEach(d=>{
+    const c = document.createElement('div'); c.className='cnum'; c.textContent = parseYmd(d).getDate();
+    grid.appendChild(c);
+  });
+  PEOPLE.forEach(p=>{
+    const n = document.createElement('div'); n.className='bname';
+    n.innerHTML = mascot(p,'green',22)+`<strong>${p.name}</strong>`;
+    grid.appendChild(n);
+    days.forEach(d=>{
+      const st = statusOf(p.id,d);
+      const c = document.createElement('div');
+      c.className = 'cell '+(st==='green'||st==='amber'||st==='red'?st:'')+(d===TODAY?' today':'');
+      grid.appendChild(c);
+    });
+  });
+  $('bRange').textContent = `${parseYmd(state.start).getDate()} ${MN[parseYmd(state.start).getMonth()].slice(0,3)} — ${parseYmd(addDays(state.start,LEN-1)).getDate()} ${MN[parseYmd(addDays(state.start,LEN-1)).getMonth()].slice(0,3)}`;
+  $('startInput').value = state.start;
+
+  const pl = $('plist'); pl.innerHTML='';
+  PEOPLE.forEach(p=>{
+    const s = summarize(p.id);
+    const b = document.createElement('button');
+    b.className='pcard'; b.dataset.person=p.id;
+    const last7 = dayList().filter(d=>d<=TODAY).slice(-7);
+    b.innerHTML = `${mascot(p, s.green>=s.red?'green':'red', 42)}
+      <span class="meta"><strong>${p.name}</strong>
+        <span class="mini">${last7.map(d=>{const st=statusOf(p.id,d);return `<i class="${st==='green'||st==='amber'||st==='red'?st:''}"></i>`}).join('')}</span>
+      </span>
+      <span class="pill">${s.pct}%</span><span class="chev">›</span>`;
+    pl.appendChild(b);
+  });
+}
+
+function summarize(pid){
+  const days = dayList().filter(d=>d<=TODAY);
+  let green=0, amber=0, red=0, streak=0, best=0;
+  days.forEach(d=>{
+    const st = statusOf(pid,d);
+    if(st==='green') green++; else if(st==='amber') amber++; else if(st==='red') red++;
+    if(st==='red'){ streak=0 } else if(st==='green'||st==='amber'){ streak++; best=Math.max(best,streak) }
+  });
+  const counted = green+amber+red;
+  const pct = counted ? Math.round((green + amber*0.5)/counted*100) : 0;
+  return {green, amber, red, streak, best, pct};
+}
+
+function openPerson(pid){
+  const p = byId(pid), s = summarize(pid);
+  $('sMasc').innerHTML = mascot(p, s.green>=s.red?'green':'red', 96);
+  $('sName').textContent = p.name;
+  $('sSub').textContent = `${s.pct}% выполнения · лучшая серия ${s.best}`;
+  $('sGreen').textContent = s.green; $('sAmber').textContent = s.amber;
+  $('sRed').textContent = s.red; $('sStreak').textContent = s.streak;
+  const wrap = $('sDays'); wrap.innerHTML='';
+  const days = dayList().filter(d=>d<=TODAY).reverse();
+  if(!days.length){ wrap.innerHTML = '<p class="empty">Марафон ещё не начался.</p>' }
+  days.forEach(d=>{
+    const st = statusOf(pid,d);
+    const doc = docOf(pid,d);
+    const tasks = (doc && doc.tasks) || [];
+    const row = document.createElement('div'); row.className='dayrow';
+    row.innerHTML = `<div class="dmark ${st==='green'||st==='amber'||st==='red'?st:''}">${parseYmd(d).getDate()}</div>
+      <div class="col" style="gap:1px;min-width:0;flex:1">
+        <p class="tiny muted">${human(d)}</p>
+        ${tasks.length
+          ? `<ul>${tasks.map(t=>`<li class="${t.done?'ok':''}"><i>${t.done?'✓':'–'}</i><span>${esc(t.text)}</span></li>`).join('')}</ul>`
+          : `<p class="tiny muted" style="margin-top:3px">плана не было</p>`}
+      </div>`;
+    wrap.appendChild(row);
+  });
+  $('sheet').classList.remove('hide');
+  $('sheet').scrollTop = 0;
+}
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])) }
+
+/* ============ ворота ============ */
+function renderGate(){
+  $('gateMasc').innerHTML = mascot(PEOPLE[0],'green',88);
+  const g = $('pickGrid'); g.innerHTML='';
+  PEOPLE.forEach(p=>{
+    const b=document.createElement('button');
+    b.className='pick'; b.dataset.pick=p.id;
+    b.innerHTML = mascot(p,'green',58)+`<span>${p.name}</span>`;
+    g.appendChild(b);
+  });
+}
+renderGate();
+if(state.me) render();
+
+/* ============ события ============ */
+document.addEventListener('click', e=>{
+  const pick = e.target.closest('[data-pick]');
+  if(pick){
+    state.me = pick.dataset.pick;
+    try{ localStorage.setItem('marafon.me', state.me) }catch(err){}
+    render(); return;
+  }
+  const tab = e.target.closest('[data-tab]');
+  if(tab){ state.tab = tab.dataset.tab; render(); return }
+
+  const tg = e.target.closest('[data-toggle]');
+  if(tg){
+    const i = +tg.dataset.toggle;
+    const d = docOf(state.me, state.cursor);
+    if(!d) return;
+    const tasks = d.tasks.map((t,k)=> k===i ? {...t, done:!t.done} : t);
+    saveDay(state.me, state.cursor, tasks); return;
+  }
+  const dl = e.target.closest('[data-del]');
+  if(dl){
+    const i = +dl.dataset.del;
+    const d = docOf(state.me, state.cursor);
+    if(!d) return;
+    saveDay(state.me, state.cursor, d.tasks.filter((_,k)=>k!==i)); return;
+  }
+  const dd = e.target.closest('[data-ddel]');
+  if(dd){
+    const i = +dd.dataset.ddel;
+    const dr = loadDraft(); dr.splice(i,1); saveDraft(dr); render(); return;
+  }
+  const wd = e.target.closest('[data-day]');
+  if(wd){ state.cursor = wd.dataset.day; render(); return }
+
+  const pc = e.target.closest('[data-person]');
+  if(pc){ openPerson(pc.dataset.person); return }
+});
+
+$('sBack').addEventListener('click', ()=> $('sheet').classList.add('hide'));
+$('whoBtn').addEventListener('click', ()=>{
+  $('gate').classList.remove('hide'); $('app').hidden = true; $('tabbar').classList.add('hide');
+});
+$('wPrev').addEventListener('click', ()=>{
+  const t = addDays(weekStart(state.cursor), -7);
+  state.cursor = t < state.start ? state.start : t; render();
+});
+$('wNext').addEventListener('click', ()=>{
+  const t = addDays(weekStart(state.cursor), 7);
+  const last = addDays(state.start, LEN-1);
+  state.cursor = t > last ? last : t; render();
+});
+$('dPrev').addEventListener('click', ()=>{ state.cursor = addDays(state.cursor,-1); render() });
+$('dNext').addEventListener('click', ()=>{ state.cursor = addDays(state.cursor, 1); render() });
+$('saveStart').addEventListener('click', ()=>{
+  const v = $('startInput').value;
+  if(/^\d{4}-\d{2}-\d{2}$/.test(v)) saveStart(v);
+});
+function draftKey(){ return 'marafon.draft.'+state.me+'.'+state.cursor }
+function loadDraft(){ try{ const v = JSON.parse(localStorage.getItem(draftKey())||'[]'); return Array.isArray(v)?v:[] }catch(e){ return [] } }
+function saveDraft(a){ try{ localStorage.setItem(draftKey(), JSON.stringify(a)) }catch(e){} }
+function clearDraft(){ try{ localStorage.removeItem(draftKey()) }catch(e){} }
+
+function addTask(){
+  const inp = $('newTask'); const text = inp.value.trim();
+  if(!text) return;
+  const d = docOf(state.me, state.cursor);
+  const published = !!(d && d.tasks && d.tasks.length);
+  inp.value = '';
+  $('addBtn').disabled = true;
+  if(published){
+    saveDay(state.me, state.cursor, [...d.tasks, {text, done:false}]);
+  } else {
+    const dr = loadDraft(); dr.push(text); saveDraft(dr); render();
+  }
+  inp.focus();
+}
+$('launchBtn').addEventListener('click', ()=>{
+  const dr = loadDraft();
+  if(!dr.length) return;
+  clearDraft();
+  state.adding = false;
+  saveDay(state.me, state.cursor, dr.map(t=>({text:t, done:false})));
+});
+$('moreBtn').addEventListener('click', ()=>{
+  state.adding = true; render();
+  const inp = $('newTask'); if(inp) inp.focus();
+});
+// pointerdown срабатывает до того, как поле теряет фокус, — иначе на айфоне
+// клавиатура успевает закрыться и нажатие промахивается мимо кнопки
+$('addBtn').addEventListener('pointerdown', e=>{ e.preventDefault(); addTask() });
+$('adder').addEventListener('submit', e=>{ e.preventDefault(); addTask() });
+$('newTask').addEventListener('input', ()=>{ $('addBtn').disabled = !$('newTask').value.trim() });
+$('newTask').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); addTask() } });
+$('newTask').addEventListener('focus', ()=>{
+  document.body.classList.add('kb');
+  setTimeout(()=>{ try{ $('adder').scrollIntoView({block:'center', behavior:'smooth'}) }catch(err){} }, 300);
+});
+$('newTask').addEventListener('blur', ()=>{
+  setTimeout(()=>{ if(document.activeElement !== $('newTask')) document.body.classList.remove('kb') }, 150);
+});
+
+/* ============ подключение к Supabase ============ */
+function applyRows(rows){
+  state.days = new Map();
+  (rows||[]).forEach(r=>{
+    if(!r.person || !r.day) return;
+    const date = String(r.day).slice(0,10);
+    state.days.set(r.person+'__'+date, {person:r.person, date, tasks:Array.isArray(r.tasks)?r.tasks:[]});
+  });
+}
+
+(async ()=>{
+  if(!window.supabase || !window.supabase.createClient){
+    $('warn').textContent = 'Не удалось подключиться к базе. Обнови страницу.';
+    $('warn').classList.remove('hide');
+    state.loaded = true; if(state.me) render(); return;
+  }
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  state.db = sb;
+
+  const timer = setTimeout(()=>{
+    if(!state.loaded){
+      $('warn').textContent = 'Данные пока не загрузились. Проверь связь.';
+      $('warn').classList.remove('hide');
+    }
+  }, 10000);
+
+  async function pull(){
+    const [d, c] = await Promise.all([
+      sb.from('days').select('*').limit(1000),
+      sb.from('config').select('*').eq('key','marathon').maybeSingle()
+    ]);
+    if(!d.error) applyRows(d.data);
+    if(!c.error && c.data && c.data.value && typeof c.data.value.start === 'string'
+       && /^\d{4}-\d{2}-\d{2}$/.test(c.data.value.start)){
+      state.start = c.data.value.start;
+    }
+    state.loaded = true; clearTimeout(timer);
+    if(state.me) render();
+  }
+
+  await pull();
+
+  sb.channel('marafon')
+    .on('postgres_changes', {event:'*', schema:'public', table:'days'},   ()=>{ pull() })
+    .on('postgres_changes', {event:'*', schema:'public', table:'config'}, ()=>{ pull() })
+    .subscribe();
+
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pull() });
+  setInterval(()=>{ if(!document.hidden) pull() }, 60000);
+})();
+</script>
+
+</body>
+</html>
